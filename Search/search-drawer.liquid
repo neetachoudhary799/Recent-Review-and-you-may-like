@@ -1,0 +1,199 @@
+  
+<div class="bgwhit">
+  <div class="cutliver-drawer search-drawer">
+    <div class="cutliver-box {% if settings.Drawer_style == 'left' %} cultiver-box-left {% else %} cultiver-box-right{% endif %}">
+     <div class="scrolltab">
+     <header class="cutliver-drawer-header">
+        <div>
+          <predictive-search>
+          <form action="{{ routes.search_url }}" method="get" role="search">
+            <div class="search_form {% if settings.search_enabled  %} {% else %} cultiver_search_disable {% endif %}">
+              <input
+                class="form-control"
+                id="Search"
+                type="search"
+                name="q"
+                value="{% comment %}{{ search.terms | escape }}{% endcomment %}"
+                role="combobox"
+                aria-expanded="false"
+                aria-owns="predictive-search-results"
+                aria-controls="predictive-search-results"
+                aria-haspopup="listbox"
+                aria-autocomplete="list"
+                placeholder="Search for “Bedding Set”"
+                {% if settings.search_enabled %} {% else %}disabled {% endif %}
+              />
+              <input name="options[prefix]" type="hidden" value="last" />
+              <button class="btn btn-search" style="position: absolute">
+                {% render 'icon-chevron-search' %}
+              </button>
+            </div>
+            <div id="predictive-search" tabindex="-1"></div>
+          </form>
+          </predictive-search>
+        </div>
+        <div class="cutliver-drawer-header-right">
+          <a class="cutliver-drawer-header-right-close" type="button">
+            {% render 'icon-close' %}
+          </a>
+        </div>
+      </header>
+      <div class="cultiover_boxx">
+      <div class="cultiover_container">
+         <p class="suggestion-titl">Suggestions</p>
+        <div class="suggestion">
+          {% assign swatch_group_tag = section.blocks | where: 'type', 'search_drawer' %}
+            {% if swatch_group_tag %}
+          {% for block in swatch_group_tag %} 
+          {% assign collection_new = block.settings.main_collection  %}
+            {% assign collection_disable = collections[collection_new].metafields.custom.search_cart_drawer_disable_collection_ %}              
+                <p class="suggestion-text"  {% if collection_disable %}
+                style="display:none;"
+                {% endif %}>
+                <span>	<a href="{{collections[collection_new].url}}">{{collections[collection_new].title}}</a></span>
+                <span class="resultno"></span>
+                </p>
+          {% endfor %}
+          {% else %}
+          <p class="suggestion-text">
+            <span>Dining sets for Christmas</span>
+             <span class="resultno"></span>
+          </p>
+          <p class="suggestion-text">
+            <span>Gift Card</span>
+            <span class="resultno"></span>
+          </p>
+          <p class="suggestion-text">
+            <span>Material Swatches</span>x
+            <span class="resultno"></span>
+          </p>
+          <p class="suggestion-text">
+            <span>Cushions for living room</span>
+             <span class="resultno"></span>
+          </p>
+          {% endif %}
+        </div>
+        <hr />
+        <div class="cultiover_box">
+            {% comment %}
+              {% if search.results  != blank %}
+              <div class="drwawn-box featured-products-slider">
+              <div class="row slider__content--cust">
+              {% assign limitno = settings.number_of_slides %}
+              {% for product in search.results  limit: limitno %}
+              {% if product.object_type == 'product' and product.available == true %}
+              <div class="col-12 col-lg-4 width-featured paddingdiv  ">
+              {% render 'product-card' , product: product %}
+              </div>
+              {% endif %}
+              {% endfor %}
+              </div>
+              <div class="load-result">
+              <button id="move_search_page">See all results</button>
+              </div>
+              </div>
+              {% endif %}
+             {% endcomment %} 
+        </div>
+       
+      </div>
+       </div>
+     </div>
+    </div>
+  </div>
+{% schema %}
+  {
+    "name": "Search Drawer Empty Info",
+    "settings": [],
+    "blocks":[
+        {
+            "type": "search_drawer",
+            "name": "Search Drawer",
+            "settings": [
+                {
+                "type": "header",
+                "content": "Select Collection"
+                },
+                {
+                  "id": "main_collection",
+                  "type": "collection",
+                  "label": "Select Collection"
+                }
+            ]
+        }
+    ]
+  }
+{% endschema %}
+  <script>
+    class PredictiveSearch extends HTMLElement {
+  constructor() {
+    super();
+
+    this.input = this.querySelector('input[type="search"]');
+    this.predictiveSearchResults = this.querySelector('#predictive-search');
+
+    this.input.addEventListener('input', this.debounce((event) => {
+      this.onChange(event);
+    }, 300).bind(this));
+  }
+
+  onChange() {
+    const searchTerm = this.input.value.trim();
+
+    if (!searchTerm.length) {
+      this.close();
+      return;
+    }
+
+    this.getSearchResults(searchTerm);
+  }
+
+  getSearchResults(searchTerm) {
+    fetch(`/search/suggest?q=${searchTerm}&resources[limit]=10&resources[type]=product,collection&section_id=predictive-search`)
+      .then((response) => {
+        if (!response.ok) {
+          var error = new Error(response.status);
+          this.close();
+          throw error;
+        }
+
+        return response.text();
+      })
+      .then((text) => {
+        const resultsMarkup = new DOMParser().parseFromString(text, 'text/html').querySelector('#shopify-section-predictive-search').innerHTML;
+     
+         $('.cultiover_boxx').html(resultsMarkup); 
+        this.open();
+      })
+      .catch((error) => {
+        this.close();
+        throw error;
+      });
+  }
+
+  open() {
+    this.predictiveSearchResults.style.display = 'block';
+  }
+
+  close() {
+    this.predictiveSearchResults.style.display = 'none';
+  }
+
+  debounce(fn, wait) {
+    let t;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(this, args), wait);
+    };
+  }
+}
+
+customElements.define('predictive-search', PredictiveSearch);
+  </script>
+
+  
+</div>
+
+
+
+
