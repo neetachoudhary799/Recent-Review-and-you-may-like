@@ -1,0 +1,119 @@
+{%- if predictive_search.performed -%}
+ <div class="cultiover_container">
+   {%- if predictive_search.resources.queries.size > 0 or predictive_search.resources.collections.size > 0 -%}
+        <p class="suggestion-titl">Suggestions</p>
+        <div class="suggestion">
+         {% comment %} 
+         {%- for query in predictive_search.resources.queries -%}
+            <p class="suggestion-text" id="query-{{ forloop.index }}"">
+            <span>{{ query.text }}</span>
+            <span class="resultno">1 results</span>
+            </p>
+          <p class="suggestion-titl"> {{ text.product}}</p>
+          <p class="titl-text"> {{ text.collection }}</p>
+          <p class="text-area">{{area.text}}</p>
+          <p> </p>
+          {%- endfor -%}
+         {% endcomment %}
+          {%- for collection in predictive_search.resources.collections limit:5 -%}
+            {% assign collection_disable = collection.metafields.custom.search_cart_drawer_disable_collection_ %}
+            {% if collection_disable %}
+            {% break %}
+            {% endif %}
+            <p class="suggestion-text" id="query-{{ forloop.index }}">
+            <span><a href="{{ collection.url }}">{{ collection.title | escape }}</a></span>
+            {% assign available_products = 0 %}
+            {% for product in collections[collection.handle].products %}
+            {% if product.available %}
+            {% assign available_products = available_products | plus: 1 %}
+            {% endif %}
+            {% endfor %}
+            <span class="resultno">{{ available_products }} results</span>
+            </p>
+           {%- endfor -%}
+        </div>
+   {%- endif -%}
+        <hr />  
+    <div class="drwawn-box featured-products-slider search_drawer_c">
+          <div class="row slider__content--cust">
+
+             {% assign limitno = settings.number_of_slides %}
+          {% assign search_show_swatch = settings.search_show_swatch %}
+          {% assign search_show_price = settings.search_show_price %}
+            {%- for collection in predictive_search.resources.collections limit:3 -%}  
+                {% assign collection_disable = collection.metafields.custom.search_cart_drawer_disable_collection_ %}
+                {% if collection_disable %}
+                {% break %}
+                {% endif %}
+            {% assign available_products = 0 %}
+          {% assign collhandle = collection.handle %}
+            {% for product in collections[collection.handle].products %}
+              <div class="col-12 col-lg-4 width-featured paddingdiv  ">
+            {% render 'product-card' , 
+            product: product , 
+            search_show_swatch : search_show_swatch,
+            search_show_price : search_show_price,
+            collection: collection %}
+              </div>
+            {% endfor %}
+           {%- endfor -%}
+
+            {% comment %}
+          {% assign limitno = settings.number_of_slides %}
+          {% assign search_show_swatch = settings.search_show_swatch %}
+          {% assign search_show_price = settings.search_show_price %}
+          {%- for product in predictive_search.resources.products  limit:limitno-%}
+          {% if product.object_type == 'product' and product.available == true %}
+          <div class="col-12 col-lg-4 width-featured paddingdiv  ">
+          {% render 'product-card' , 
+            product: product , 
+            search_show_swatch : search_show_swatch,
+            search_show_price : search_show_price %}
+          </div>
+          {% endif %}
+          {% endfor %}
+          </div>
+          {% endcomment %}
+          
+    </div>
+      <div class="load-result">
+            <button id="move_search_page">See all results</button>
+          </div>
+   </div>
+{% endif %}
+  
+<script> 
+$(document).ready(function(){
+  $( "body #move_search_page" ).on( "click", function() {
+  $('button.btn.btn-search').click();
+  });
+});
+setTimeout(function () {
+ $('.slider__content--cust').slick({
+    centerMode: false,
+    slidesToShow: 1,
+    autoplay: false,
+    autoplaySpeed: 1000,
+    variableWidth: true,
+       arrows: false,
+    responsive: [
+      {
+        breakpoint: 768,
+        settings: {
+          arrows: false,
+          centerMode: false,
+          slidesToShow: 3
+        }
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          arrows: false,
+          centerMode: false,
+          slidesToShow: 1,
+        }
+      }
+    ]
+  });
+}, 500); 
+  </script>
