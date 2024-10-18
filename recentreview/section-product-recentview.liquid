@@ -1,0 +1,300 @@
+
+{% assign productSlug = request.path | remove: "/products/" %}
+{% assign product = all_products[productSlug] %}
+{% assign search_show_price = true %}
+{% assign search_show_swatch = true %}
+
+<span class="product_card_box paddingdiv product_card_box_js">
+              <div class="width-featured paddingdiv product_item marginBot">
+                <a class="img_change" href="{{ product.url | within: collection}}">
+                  <div class="product_img mb-4 btn-shop">
+                      {% render 'badges' product:product %}    
+                    <!-- Swym Wishlist Plus EPI Button-->
+                    <span class="swym-wishlist-block">
+                                            <button data-with-epi="true" 
+                                                class="swymwishlist swym-button swym-add-to-wishlist-view-product product_{{product.id}}" 
+                                                data-swaction="addToWishlist" 
+                                                data-product-id="{{product.id}}" 
+                                                data-variant-id="{{product.selected_or_first_available_variant.id}}" 
+                                                data-product-url="{{ shop.url }}{{ product.url }}">
+                                              <span class="cultiver_wishlist_design">
+                                               {% render 'icon-wishlist-dark' %}
+                                              </span>
+                                            </button>
+                 </span>
+                    <!-- Swym Wishlist Plus EPI Button-->
+                   <img class="main_image img-fluid"
+                                            src="{{ product.featured_image | img_url: 'master' }}"
+                                            data-sizes="auto"
+                                            {{ attribute_prefix }} src="{{ product.featured_image | img_url: '10x' }}"
+                                            {{ attribute_prefix }} data-src="{{ product.featured_image | img_url: '302x' }}"
+                                            {{ attribute_prefix }} class-lazyload="{{product.featured_image}}"
+                                            {{ attribute_prefix }} alt="{{product.featured_image.alt}}" class="blur-up fade-in"
+                                            {{ attribute_prefix }} if="{{product.featured_image}}"
+                                        />
+
+                    <div class="product_hover mb-4" style="opacity: 0">
+                        {% if product.media.size > 1 %}
+                              <img class="img-fluid"
+                              src="{{ product.images[1] | img_url: 'master' }}"
+                              data-sizes="auto"
+                              {{ attribute_prefix }} src="{{ product.images[1] | img_url: '10x' }}"
+                              {{ attribute_prefix }} data-src="{{ product.images[1] | img_url: '302x' }}"
+                              {{ attribute_prefix }} class-lazyload="{{product.images[1]}}"
+                              {{ attribute_prefix }} alt="{{product.images[1].alt}}" class="blur-up fade-in"
+                              {{ attribute_prefix }} if="{{product.images[1]}}"
+                              />
+                        {% else %}
+                              <img class="img-fluid"
+                              src="{{ product.featured_image | img_url: 'master' }}"
+                              data-sizes="auto"
+                              {{ attribute_prefix }} src="{{ product.featured_image | img_url: '10x' }}"
+                              {{ attribute_prefix }} data-src="{{ product.featured_image | img_url: '302x' }}"
+                              {{ attribute_prefix }} class-lazyload="{{product.featured_image}}"
+                              {{ attribute_prefix }} alt="{{product.featured_image.alt}}" class="blur-up fade-in"
+                              {{ attribute_prefix }} if="{{product.featured_image}}"
+                              />
+                        {% endif %}
+                    </div>
+                  </div>
+                </a>
+                <div data-handle="{{ product.handle }}" data-siteurl="{{ shop.url }}" data-productid="{{ product.id }}" class="mobile-quick-add-btn"><span class="circle_icon">+</span></div>
+                {%- if search_show_swatch -%}
+                <div class="product-card_buttons product_cultiver_parentjs_common">
+                                    <button class="desktop_quick_btn quick-add-btn" data-product-id="{{ product.id }}">
+                                      <span class="circle_icon">+</span>{% comment %}{% render 'icon-featured-add' %}{% endcomment %}</button>
+               
+                                    {% form 'product', product %}
+                                    <div class="variant-options variant-options_js" id="variant-options-{{ product.id }}"  style="display: none;">
+                                        <div class="row">
+                                            <div class="col-8 col-lg-8">
+                                                {% comment %}<span class="cp_titl"><h3>Select Size</h3></span>{% endcomment %}
+                                              <span class="prduct_titl"><p>Select Size</p></span>
+                                               {%- if product.metafields.custom.bundle_product.value == blank -%}
+                                               <span id="sizeguide_error_message" class="error-message" style="display:none;">Please select size</span>
+                                              {% endif %}
+                                            </div>
+                                            <div class="col-4 col-lg-4 text-end" style="margin-top:-5px;z-index: 9999;">
+                                                <button style="z-index: 9999;" class="close-icon" data-product-id="{{ product.id }}">{%  render 'icon-close' %}</button>
+                                            </div>
+                                        </div>
+                                      {%- if product.metafields.custom.bundle_product.value != blank -%}
+                                                {% render 'bundle-product' product:product %}    
+                                        {% else %}
+                                      {% assign sizelimt=product.variants.size  %}
+                                        <div class="radio radio_nocss {% if sizelimt > 6 %}sixvariant{% endif %}">
+                                            {% for variant in product.variants %}
+                                                {% if variant.inventory_quantity == 0 %}
+                                                    <input data-vraintprice="{{ variant.price | money }}" label="{{ variant.title }}" class="out-of-stock-prod" style="color: #CAC8BB;border: none;" type="radio" id="{{ product.handle }}-variant" name="id" value="{{variant.id}}" disabled>
+                                                {% else %}
+                                                    <input data-vraintprice="{{ variant.price | money }}" label="{{ variant.title }}" class="" type="radio" id="{{ product.handle }}-variant" name="id" value="{{variant.id}}">
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        {% assign all_sold_out = fasle %}
+                                        {% assign pp_check = false %}
+                                        {% assign price_check_c = product.price %}
+                                        {% for variant in product.variants %}
+                                         {% comment %} {{ price_check_c }} == {{ variant.price   }}<br>{% endcomment %}
+                                        {% if price_check_c != variant.price  %}
+                                          {% assign pp_check = true %}
+                                        {% endif %}
+                                        {% if variant.available %}
+                                            {% assign all_sold_out = false %}
+                                        {% endif %}
+                                        {% endfor %}
+
+                                        {% if all_sold_out %}
+                                        <button 
+                                            class="btn-sold-out standard-text mt-4 featured-add-to-cart"
+                                            type="" 
+                                            value="Submit" 
+                                            title="Sold Out" 
+                                            tabindex="0"
+                                            disabled
+                                        >
+                                            SOLD OUT
+                                        </button>
+                                        {% else %}
+                                            <button 
+                                                class="btn-bronze standard-text mt-4 featured-add-to-cart"
+                                                type="submit" 
+                                                value="Submit" 
+                                                title="Add to Cart" 
+                                                tabindex="0"
+                                            >
+                                               <span> ADD TO CART</span>
+                                            </button>
+                                        {% endif %}
+                                       {% endif %}
+                                    </div>
+                                    {% endform %}
+                                </div>
+                 
+                   {% endif %}
+              </div>
+               <div class="row product-details ">
+                                <div class="col-8 col-lg-7">
+                                    <p class="standard-text"><a  href="{{ product.url | within: collection}}"> {% render 'product-title' product:product %}</a></p>
+                                </div>
+                                <div class="col-4 col-lg-5 text-end">
+                                   {%- if product.metafields.custom.bundle_product.value != blank -%}
+                                     <span class="product_price" id="{{ product.id }}">
+                         <p class="c_first_box_price"> <span class="form_hide small-text">From</span><br> {% render 'price' product:product %}</p>
+                         <p class="c_second_box_price" style="display:none"> <span class="form_hide small-text">From</span><br> {% render 'price' product:product %}</p>
+                      </span>
+                                  {% else %}
+                                  {%- if search_show_price -%}
+                                    <p>
+                                       {% if pp_check == true %}<span class="small-text">From</span><br>{% endif %}
+                                       {% render 'price' product:product %}
+                                    </p>
+                                  {%- endif -%}
+                                  {% endif %}
+                                </div>
+                            </div>
+              <div class="row product-details cutiver_review_swatch_cus">
+                                <div class="col-8 col-lg-8">
+                                    <div class="review">
+                                        
+                                           {% render 'okendo-reviews-product-rating-summary', product: product %}
+                                           {% comment %} <p><span class="star">
+                                                {% render 'icon-review-star' %}
+                                            </span>
+                                            <span class="rating-review">4.8</span> </p>{% endcomment %}
+                                       
+                                    </div>
+                                </div>
+                                <div class="col-4 col-lg-4 text-end">
+
+{%- if product.metafields.custom.swatch_group.value != blank -%}               
+{% render 'swatch-group-metafield' product:product %}
+{%- else -%}  
+
+
+  
+                                    {%- if search_show_swatch -%}
+
+
+
+                                      
+
+{% if product.metafields.c_f['Related Products'] %}
+  {% assign collection = collections[product.metafields.c_f['Related Products']] %}
+{% endif %}
+{% assign found_a_collection = false %}
+{% if collection and collection.all_products_count > 1 %}
+  {% unless exclusions contains collection.handle %}
+    {% assign found_a_collection = true %}
+  {% endunless %}
+{% endif %}
+{% unless found_a_collection %}
+  {% for c in product.collections %}
+    {% unless exclusions contains c.handle or c.all_products_count < 2 %}
+      {% assign found_a_collection = true %}
+      {% assign collection = c %}
+      {% break %}
+    {% endunless %}
+  {% endfor %}
+{% endunless %}
+
+
+                                    {% assign main_tagg = "" %}
+                                    
+                                    {% for tag in product.tags %}
+                                    {% if tag contains "SWG-" %}
+                                        {% assign main_tagg = tag | downcase %}
+                                        {% break %}
+                                    {% endif %}
+                                    {% endfor %}
+
+
+                                      
+                                      
+
+                                      
+                                    {% assign target_tag = "" %}
+
+                                    {% for tag in product.tags %}
+                                        {% if tag contains "stitch" %}
+                                            {% assign target_tag = tag %}
+                                            {% break %}
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% assign stitchProductscount = 0 %}
+                                    {% for product in collection.products %}
+                                        {% if product.tags contains target_tag %}
+                                            {% assign stitchProductscount =  stitchProductscount | plus:1%}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% assign cur_prodtitle = product.title | split: ' - '  %}
+                                      {% assign product_id = product.id %}
+                                    <div class="product-stitch-tag" data-stitch-tag="{{ target_tag }}"></div>
+                                    <div class="color-swatches" {% if main_tagg  %} cc-data-color-main="{{ main_tagg | downcase }}"{% endif %} >
+                                        <div class="row position-relative">
+                                            <div {% if main_tagg  %} cc-data-color="{{ main_tagg | downcase }}"{% endif %} 
+                                              class="{% if stitchProductscount > 3 %} col-10 col-lg-10 {% else %}col-12 col-lg-12  {% endif %} cc_product_box">
+                                                {% assign count_coll = 0 %}
+                                                {% for product in collection.products   %}
+                                                   {% if product.tags contains target_tag %}
+                                                     {% if count_coll == 3 %}
+                                                       
+                                                      {% endif %}
+
+                                                      {% assign colour_taggg = "" %}
+                                                      {%- for tag in product.tags -%}
+                                                      {%- if tag contains "colour-" -%}
+                                                      {%- assign colour_taggg = tag | remove:"colour-" | downcase -%}
+                                                      {% break %}
+                                                      {%- endif -%}
+                                                      {%- endfor -%}
+                                                     
+                                                    {% assign prodtitle = product.title | split: ' - '  %}
+                                                   {% assign product_id_in = product.id %}
+                                                 
+                                                                <div {% if prodtitle[1] %}cc_data_color="{{ prodtitle[1] | downcase | remove: " " }}" {% endif %} 
+                                                                  class="{% if prodtitle[1] %} cc_product_color  {% endif %}   color-swatch-border" {% if product_id == product_id_in %}style="border:1px solid var(--charcoal)"{% endif %}>
+                                                                    <a href="{{ product.url | within: collection }}">
+                                                                        <div class=" {% if product_id == product_id_in %}color-swatch-active{% else %}color-swatch{% endif %}" 
+                                                                          data-color="{%- if colour_taggg !=blank  -%}{{ colour_taggg }}{%- else -%}{{ prodtitle[1] | downcase | replace: " ", "-" }}{%- endif -%}" ></div>
+                                                                    </a>
+                                                                </div>
+                                                     {% endif %}
+                                                  {% assign count_coll =  count_coll | plus:1%}
+                                                {% endfor %} 
+                                        
+                                            </div>
+                                            <div class="col-2 col-lg-2  {% if stitchProductscount > 3 %} {% else %} cultiver_hide_plus_icon {% endif %}">
+                                                {% if stitchProductscount > 3 %}
+                                                    <div class="see-more">
+                                                        <a href="{{ product.url | within: collection }}">{% render 'icon-featured-add' %}</a>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
+                                   {%- endif -%}
+
+                                  
+  
+                                  {%- endif -%}
+
+
+{% comment %}
+{% render 'swatch_group_customization' product:product,target_tag:target_tag,main_tagg:main_tagg,product_id:product_id %}
+ {% endcomment %}                                 
+                                  
+                                </div>
+                            </div>
+</span>
+
+<style>
+  .cc_product_box .cc_product_color{
+  display:none;
+}
+</style>
+
+
+
