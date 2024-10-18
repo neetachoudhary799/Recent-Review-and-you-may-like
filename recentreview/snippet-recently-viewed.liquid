@@ -1,0 +1,230 @@
+
+<style>
+  .c-product__img img{
+    width:100%;
+  }
+</style>
+<div class="drwawn-box featured-products-slider ">
+<script>
+    // First Block
+        function setRecentlyViewedPdp() {
+
+            const pdpData = {
+                id : "{{ product.id }}",
+                productTitle : "{{ product.title }}",
+              producthandle: "{{ product.handle }}",
+              shopurl:"{{ shop.url }}"
+            };
+    
+            // Init Empty Array to push data
+            const productArr = [];
+            // Create a couple of variables 
+            let jsonResp,
+                jsonRespArr, 
+                jsonRespArrStr; 
+            // Set the number how many products you want to capture 
+            const numberOfProduct = 8;
+            // Now push the pdpData into Array so that we can use it 
+            productArr.push(pdpData);
+            // Get the product title from pdpData 
+            const currPdpTitle = pdpData.productTitle;
+            // Now Convert current page data into Strings which we already pushed in Array 
+            const pdpDataString = JSON.stringify(productArr);
+            // Set the variable for localStorage 
+            const localData = localStorage.getItem('recently_viewed');
+          
+            // Second Block
+            // first we need to check data if data is not there then store right // away 
+            if (localData == null) {
+                localStorage.setItem('recently_viewed', pdpDataString);
+            }
+            // If data is there then we need to check couple of other conditions 
+            else if ( localData != null ) {
+                
+                // Create Variable for oldData or Previous page 
+                const oldPdpData = localStorage.getItem('recently_viewed');
+                // Count the amount of data stored in strings so that we can remove // old products from the stack 
+                const countPdpData = (oldPdpData.match(/productTitle/g) || []).length;
+                // we also need to check if user is not visiting page again 
+                const reVisitPdp =  oldPdpData.includes(currPdpTitle);
+                // Get old data, merged it with new data and store merged data
+                if (countPdpData < numberOfProduct && reVisitPdp == false) {
+                    jsonResp = JSON.parse(oldPdpData);
+                    jsonRespArr = jsonResp.concat(productArr);
+                    jsonRespArrStr = JSON.stringify(jsonRespArr);
+                    localStorage.setItem('recently_viewed', jsonRespArrStr);
+                }
+                // If User visited more the 4 pages delete first page data 
+                else if (countPdpData >= numberOfProduct && reVisitPdp == false) {
+                    jsonResp = JSON.parse(oldPdpData);
+                    jsonResp.shift();
+                    jsonRespArr = jsonResp.concat(productArr);
+                    jsonRespArr =  JSON.stringify(jsonRespArr);
+                    localStorage.setItem('recently_viewed', jsonRespArr);
+                }
+            }
+        }
+        
+        // Now we write all our function and it's time to execute it 
+        setRecentlyViewedPdp();
+        // Set Variable for Local Storage Data 
+        const localViewed = localStorage.recently_viewed;
+        // console.log to verify the data 
+    </script>
+    <div class="js-recentPdpBlock row featured-recentreview-slickslider cutiver_arrow_design_cus">
+    </div>
+    <script>
+        // Third Block
+        function getRecentPdp (){
+    
+            // First let's convert localStorage data into object again
+            const pdpData = JSON.parse(localStorage.getItem('recently_viewed'));
+           // console.log(pdpData)
+          //console.log(pdpData.length);
+          var lenn = pdpData.length;
+          var addclass_s = 'normal_recent width-featured';
+          if(lenn > 4){
+            var addclass_s ='width-featured';
+          }
+            // Create a empty Array
+            const recentViewHtml = []
+            // Loop through all the data and inject into HTML using ES6
+            pdpData.forEach(function(item){
+            var datahandle=item.producthandle;
+            var dataurl=item.shopurl;
+            $.ajax({
+            url: dataurl+'/products/'+datahandle+'/?view=recentview',
+            type: 'GET',
+            //dataType: 'html',
+            success: function(data) {
+              console.log(data);
+            $('.js-recentPdpBlock').append('<div class="col-6 col-lg-3 col-sm-6 col-md-6 col-xs-6 '+addclass_s+'">'+data+'</div>');
+            addtocartbtnrecent();
+            
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+            console.error("Error fetching line-item-list content:", errorThrown);
+            }
+            });
+              
+              
+            })
+        }
+        // Execute this function on DOM content load 
+    
+        getRecentPdp();
+
+
+  function addtocartbtnrecent(){
+    $('.js-recentPdpBlock button.featured-add-to-cart').click( function(event) {
+  event.preventDefault();
+       var inputcheck = $(this).parents(".js-recentPdpBlock form").find(".radio_nocss input:checked").val();
+if(inputcheck){
+  $(".js-recentPdpBlock form").find("#sizeguide_error_message").hide();
+  var data_product= $(this).parents(".js-recentPdpBlock").find("form").serialize();
+console.log(data_product);
+    $.ajax({
+    type: 'POST',
+    url: '/cart/add.js',
+    data: data_product,
+    dataType: 'json',
+    success: function() {
+        // Get cart count
+
+ jQuery.getJSON('/cart.js', function(cart) {
+$("span.cart-count-dark").html(cart.item_count);
+});
+    // Update cart
+     updateCartDrawer();
+
+    // Open cart drawer
+    openCartDrawer();
+      // Do something on success (e.g. show a success message)
+    },
+    error: function() {
+      // Do something on error (e.g. show an error message)
+    }
+  });
+   
+}else{
+  $(this).parents(".js-recentPdpBlock form").find("#sizeguide_error_message").show();
+}
+ });
+    }
+      
+        </script>
+      <script> 
+$(document).ready(function(){
+const pdpData = JSON.parse(localStorage.getItem('recently_viewed'));
+var lenn = pdpData.length;
+  if ($(window).width() < 520) {
+    setTimeout(function() {
+ $('.featured-recentreview-slickslider').slick({
+    nextArrow: '<div class="content-previous-arrow"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="Icon"><path id="Vector 3" d="M10 7L15 11.9564L10 17.4084" stroke="#2C2C2A"/></g></svg></div>',
+    prevArrow: '<div class="content-next-arrow"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="Icon"><path id="Vector 3" d="M15 17.4082L10 12.4518L15 6.99984" stroke="#2C2C2A"/></g></svg></div>',
+  centerMode: true, 
+    slidesToShow: 3,
+    autoplay: false,
+    autoplaySpeed: 1000,
+    variableWidth: true, 
+       arrows: true,
+    responsive: [
+      {
+        breakpoint: 768,
+        settings: {
+          arrows: true,
+          centerMode: true,
+          slidesToShow: 3
+        }
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          arrows: false,
+          centerMode: false,
+          slidesToShow: 1,
+        }
+      }
+    ]
+  });
+  }, 1000);
+  }
+if(lenn > 4){
+setTimeout(function() {
+ $('.featured-recentreview-slickslider').slick({
+    nextArrow: '<div class="content-previous-arrow"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="Icon"><path id="Vector 3" d="M10 7L15 11.9564L10 17.4084" stroke="#2C2C2A"/></g></svg></div>',
+    prevArrow: '<div class="content-next-arrow"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="Icon"><path id="Vector 3" d="M15 17.4082L10 12.4518L15 6.99984" stroke="#2C2C2A"/></g></svg></div>',
+  centerMode: true, 
+    slidesToShow: 4,
+    autoplay: false,
+    autoplaySpeed: 1000,
+    variableWidth: true, 
+       arrows: true,
+    responsive: [
+      {
+        breakpoint: 768,
+        settings: {
+          arrows: true,
+          centerMode: true,
+          slidesToShow: 3
+        }
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          arrows: false,
+          centerMode: false,
+          slidesToShow: 1,
+        }
+      }
+    ]
+  });
+  }, 1000);
+  }
+}); 
+  </script>
+</div>
+
+
+
+
